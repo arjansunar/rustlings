@@ -97,9 +97,7 @@ mod tests {
     #[test]
     fn validate_team_score_1() {
         let scores = build_scores_table(get_results());
-        println!("{:#?}", scores);
         let team = scores.get("England").unwrap();
-        println!("{:#?}", team);
         assert_eq!(team.goals_scored, 5);
         assert_eq!(team.goals_conceded, 4);
     }
