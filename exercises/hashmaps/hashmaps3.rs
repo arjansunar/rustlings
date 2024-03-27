@@ -4,23 +4,38 @@
 // the form : "<team_1_name>,<team_2_name>,<team_1_goals>,<team_2_goals>"
 // Example: England,France,4,2 (England scored 4 goals, France 2).
 //
-// You have to build a scores table containing the name of the team, goals the
-// team scored, and goals the team conceded. One approach to build the scores
-// table is to use a Hashmap. The solution is partially written to use a
-// Hashmap, complete it to pass the test.
+// You have to build a scores table containing the name of the team, the total
+// number of goals the team scored, and the total number of goals the team
+// conceded. One approach to build the scores table is to use a Hashmap.
+// The solution is partially written to use a Hashmap,
+// complete it to pass the test.
 //
 // Make me pass the tests!
 //
 // Execute `rustlings hint hashmaps3` or use the `hint` watch subcommand for a
 // hint.
 
-
 use std::collections::HashMap;
 
+#[derive(Debug)]
 // A structure to store the goal details of a team.
 struct Team {
     goals_scored: u8,
     goals_conceded: u8,
+}
+
+fn sum_up_prev_game_and_insert(
+    key: String,
+    scores: &mut HashMap<String, Team>,
+    current_game: Team,
+) {
+    let prev_game = scores.get(&key);
+    let mut current_game = current_game;
+    if let Some(prev_game) = prev_game {
+        current_game.goals_scored += prev_game.goals_scored;
+        current_game.goals_conceded += prev_game.goals_conceded;
+    }
+    scores.insert(key, current_game);
 }
 
 fn build_scores_table(results: String) -> HashMap<String, Team> {
@@ -35,47 +50,21 @@ fn build_scores_table(results: String) -> HashMap<String, Team> {
         let team_2_score: u8 = v[3].parse().unwrap();
         // TODO: Populate the scores table with details extracted from the
         // current line. Keep in mind that goals scored by team_1
-        // will be the number of goals conceded from team_2, and similarly
+        // will be the number of goals conceded by team_2, and similarly
         // goals scored by team_2 will be the number of goals conceded by
         // team_1.
-        
-        if !scores.contains_key(&team_1_name){
-            let team_1 = Team{
-                name: team_1_name.clone(), 
-                goals_scored: team_1_score,
-                goals_conceded: team_2_score, 
-            };
-            
-            scores.insert(team_1_name, team_1);
-        } else {
-            
-            let team = scores.get(&team_1_name).unwrap();
-            
-            scores.insert(team_1_name.clone(), Team{
-                name: team_1_name.clone(),
-                goals_scored: team.goals_scored +  team_1_score, 
-                goals_conceded: team.goals_conceded + team_2_score 
-            });
-        }
-        
-        if !scores.contains_key(&team_2_name){
-            let team_2 = Team{
-                name: team_2_name.clone(), 
-                goals_scored: team_2_score,
-                goals_conceded: team_1_score
-            };
 
-            scores.insert(team_2_name, team_2);
-        }else {
-            let team = scores.get(&team_2_name).unwrap();
-            
-            scores.insert(team_2_name.clone(), Team{
-                name: team_2_name.clone(),
-                goals_scored: team.goals_scored +  team_2_score, 
-                goals_conceded: team.goals_conceded + team_1_score 
-            });
-        }
-        
+        let mut team_1 = Team {
+            goals_scored: team_1_score,
+            goals_conceded: team_2_score,
+        };
+        let mut team_2 = Team {
+            goals_scored: team_2_score,
+            goals_conceded: team_1_score,
+        };
+
+        sum_up_prev_game_and_insert(team_1_name, &mut scores, team_1);
+        sum_up_prev_game_and_insert(team_2_name, &mut scores, team_2);
     }
     scores
 }
@@ -108,7 +97,9 @@ mod tests {
     #[test]
     fn validate_team_score_1() {
         let scores = build_scores_table(get_results());
+        println!("{:#?}", scores);
         let team = scores.get("England").unwrap();
+        println!("{:#?}", team);
         assert_eq!(team.goals_scored, 5);
         assert_eq!(team.goals_conceded, 4);
     }
